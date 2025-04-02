@@ -1,3 +1,8 @@
+# train_quantization.py:
+# This file provides functions to train and evaluate quantized models.
+# It includes functions for post-training quantization, quantization-aware training (QAT), and handling distributed training for quantized models.
+
+
 import copy
 import datetime
 import os

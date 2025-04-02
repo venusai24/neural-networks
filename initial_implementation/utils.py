@@ -1,3 +1,7 @@
+# This file contains utility functions for training and evaluation, such as logging metrics, handling distributed training, 
+# managing checkpoints, and computing accuracy. It includes classes for tracking smoothed values, logging metrics, and maintaining 
+# exponential moving averages of model parameters.
+
 import copy
 import datetime
 import errno

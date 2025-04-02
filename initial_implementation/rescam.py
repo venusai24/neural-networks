@@ -1,3 +1,7 @@
+# This file implements a ResNet-based model with Class Activation Mapping (CAM) for visualizing important regions in images.
+# It includes classes and functions to extract gradients, compute activations, 
+# and generate heatmaps to highlight regions contributing to model predictions.
+
 import torch.nn as nn
 import cv2
 import numpy as np

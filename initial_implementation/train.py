@@ -1,3 +1,8 @@
+# train.py:
+# This file contains functions to train models, including loading data, training for one epoch, evaluating models, and setting up distributed training.
+#  It includes functions for different training stages, such as initializing models, setting up criteria, and handling checkpoints.
+
+
 import datetime
 import os
 import time

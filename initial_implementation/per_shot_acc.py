@@ -1,3 +1,7 @@
+# This file computes the accuracy of models for different shot categories (many-shot, median-shot, low-shot) 
+# in imbalanced datasets. It includes functions to load data, evaluate models, compute accuracy per class,
+# and display results for different shot categories.
+
 import torch
 
 import resnet_pytorch

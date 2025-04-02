@@ -1,3 +1,7 @@
+# This file defines data augmentation presets for training and evaluation. It includes classes for training and evaluation presets 
+# that apply transformations like resizing, cropping, normalization, and augmentations (e.g., AutoAugment, RandAugment, Cutout).
+
+
 import torch
 from torchvision.transforms import autoaugment, transforms
 from torchvision.transforms.functional import InterpolationMode

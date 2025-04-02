@@ -1,3 +1,7 @@
+# This file contains functions to initialize and load models, set up classifiers, and define loss functions. 
+# It includes functions to handle different model architectures (ResNet for PyTorch and CIFAR) and initialize classifiers
+# with specific parameters for training.
+
 import torch
 import torch.nn as nn
 try:
@@ -5,9 +9,9 @@ try:
     import resnet_cifar
     import custom
 except ModuleNotFoundError:
-    from classification import resnet_pytorch
-    from classification import resnet_cifar
-    from classification import custom
+    from initial_implementation import resnet_pytorch
+    from initial_implementation import resnet_cifar
+    from initial_implementation import custom
 
 def _mismatched_classifier(model,pretrained):
     classifier_name, old_classifier = model._modules.popitem()

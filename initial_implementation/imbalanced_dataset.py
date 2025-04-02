@@ -1,3 +1,8 @@
+# imbalanced_dataset.py: This file provides classes and functions for handling imbalanced datasets, 
+# particularly for CIFAR-10 and CIFAR-100 datasets. It includes functions to generate imbalanced versions of these datasets by 
+# adjusting the number of samples per class and methods to load and preprocess 
+# the datasets with various augmentations.
+
 import torch
 import torchvision
 from torchvision.transforms import autoaugment, transforms

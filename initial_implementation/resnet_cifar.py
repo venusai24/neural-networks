@@ -1,3 +1,6 @@
+# This file contains the implementation of ResNet architectures specifically designed for CIFAR datasets. 
+# It includes various ResNet variants with modifications such as SE_Block and CBAM for attention mechanisms.
+
 '''
 Properly implemented ResNet for CIFAR10 as described in paper [1].
 The implementation and structure of this file is hugely influenced by [2]

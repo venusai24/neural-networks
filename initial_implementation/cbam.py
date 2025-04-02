@@ -1,3 +1,8 @@
+# cbam.py : This file implements the Convolutional Block Attention Module (CBAM), 
+# which enhances the representational power of convolutional neural networks by sequentially applying channel 
+# and spatial attention mechanisms. It defines classes for basic convolutional operations, channel gating, spatial gating,
+# and the unified CBAM module.
+
 import torch
 import math
 import torch.nn as nn

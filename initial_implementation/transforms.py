@@ -1,3 +1,7 @@
+# This file defines custom data augmentation transformations like Mixup and Cutmix. 
+# These transformations enhance the robustness of models by combining images and 
+# labels in various ways during training.
+
 import math
 from typing import Tuple
 

@@ -1,3 +1,8 @@
+# sampler.py:
+# This file defines a custom sampler for distributed training with repeated augmentation.
+# The RASampler class ensures that each augmented version of a sample is visible to different processes (GPUs) during training. 
+# It extends the functionality of the torch.utils.data.DistributedSampler.
+
 import math
 
 import torch

@@ -1,3 +1,8 @@
+# custom.py: This file defines custom loss functions for training neural networks. 
+# Specifically, it includes a Binary Cross Entropy (BCE) loss function with label 
+# smoothing and an Instance-Frequency Inverse-Frequency (IIF) loss that adjusts for class imbalance 
+# using various frequency-based weighting schemes.
+
 import torch
 import torch.nn as nn
 import numpy as np

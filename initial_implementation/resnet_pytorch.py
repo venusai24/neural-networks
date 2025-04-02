@@ -1,3 +1,8 @@
+# resnet_pytorch.py:
+# This file contains the implementation of ResNet architectures for PyTorch.
+# It includes various ResNet variants with additional attention mechanisms like SE_Block and CBAM, 
+# as well as initialization functions for these models.
+
 from typing import Type, Any, Callable, Union, List, Optional
 
 import torch

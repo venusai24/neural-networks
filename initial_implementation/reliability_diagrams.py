@@ -1,3 +1,7 @@
+# This file provides functions to compute and draw reliability diagrams. These diagrams visualize the calibration of models by 
+# comparing predicted confidence scores with actual accuracies in different bins. It includes functions to compute calibration metrics,
+# plot reliability diagrams, and combine them with confidence histograms.
+
 import os
 import numpy as np
 import matplotlib.pyplot as plt

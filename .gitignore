@@ -1,0 +1,7 @@
+datasets/data/cifar-100-python.tar.gz
+myenv/Lib/site-packages/numpy-2.2.4-cp310-cp310-win_amd64.whl
+myenv/Lib/site-packages/scipy-1.15.2-cp310-cp310-win_amd64.whl
+datasets/data
+initial_implementation/__pycache__
+initial_implementation/__pycache__/__init__.cpython-310.pyc
+myenv

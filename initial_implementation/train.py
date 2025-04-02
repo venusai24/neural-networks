@@ -7,9 +7,10 @@ import datetime
 import os
 import time
 import warnings
+import sys
 
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-import torch
 import torch.utils.data
 import torchvision
 import torchvision.models as models
@@ -24,13 +25,13 @@ try:
     import imbalanced_dataset
     import initialise_model
 except ModuleNotFoundError:
-    from classification import presets
-    from classification import transforms
-    from classification import utils
-    from classification.sampler import RASampler
-    from classification import resnet_pytorch
-    from classification import imbalanced_dataset
-    from classification import initialise_model
+    from initial_implementation import presets
+    from initial_implementation import transforms
+    from initial_implementation import utils
+    from initial_implementation.sampler import RASampler
+    from initial_implementation import resnet_pytorch
+    from initial_implementation import imbalanced_dataset
+    from initial_implementation import initialise_model
     
 
 from torch import nn

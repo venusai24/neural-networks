@@ -17,7 +17,7 @@ import torchvision.datasets as datasets
 try:
     import presets
 except ModuleNotFoundError:
-    from classification import presets
+    from initial_implementation import presets
 
 
 class IMBALANCECIFAR10(torchvision.datasets.CIFAR10):

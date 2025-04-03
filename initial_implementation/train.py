@@ -16,6 +16,8 @@ import torchvision
 import torchvision.models as models
 import torch.distributed as dist
 
+from resnet_original import resnet32_orig, resnet20_orig, resnet44_orig, resnet56_orig, resnet110_orig, resnet1202_orig
+
 try:
     import presets
     import transforms

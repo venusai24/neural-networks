@@ -39,7 +39,7 @@ def get_model(args,num_classes):
             try:
                 model = eval(f'resnet_cifar.{args.model}(num_classes={num_classes},use_norm="{args.classif_norm}",use_gumbel={args.use_gumbel_se},use_gumbel_cb={args.use_gumbel_cb})')
             except AttributeError:
-                model = eval(f'resnet_original.{args.model}(num_classes={num_classes},use_norm="{args.classif_norm}",use_gumbel={args.use_gumbel_se},use_gumbel_cb={args.use_gumbel_cb})')
+                model = eval(f'resnet_original.{args.model}(num_classes={num_classes})')
         except TypeError:
             model = eval(f'resnet_cifar.{args.model}(num_classes={num_classes},use_norm="{args.classif_norm}")')
             

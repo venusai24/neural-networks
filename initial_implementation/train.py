@@ -215,7 +215,7 @@ def load_data(traindir, valdir, args):
     print("Loading training data")
     st = time.time()
 
-    if args.dset_name.lower() == 'cifar-100':
+    if args.dset_name.lower() == 'cifar-100-python':
         dataset = torchvision.datasets.CIFAR100(
             root=args.data_path, train=True, download=True,
             transform=presets.ClassificationPresetTrain(

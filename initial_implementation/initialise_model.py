@@ -7,6 +7,7 @@ import torch.nn as nn
 try:
     import resnet_pytorch
     import resnet_cifar
+    import resnet_original
     import custom
 except ModuleNotFoundError:
     from initial_implementation import resnet_pytorch
@@ -35,7 +36,10 @@ def get_model(args,num_classes):
         model = eval(f'resnet_pytorch.{args.model}(num_classes={num_classes},use_norm="{args.classif_norm}",use_gumbel={args.use_gumbel_se},use_gumbel_cb={args.use_gumbel_cb},pretrained="{args.pretrained}")')
     except AttributeError:
         try:
-            model = eval(f'resnet_cifar.{args.model}(num_classes={num_classes},use_norm="{args.classif_norm}",use_gumbel={args.use_gumbel_se},use_gumbel_cb={args.use_gumbel_cb})')
+            try:
+                model = eval(f'resnet_cifar.{args.model}(num_classes={num_classes},use_norm="{args.classif_norm}",use_gumbel={args.use_gumbel_se},use_gumbel_cb={args.use_gumbel_cb})')
+            except AttributeError:
+                model = eval(f'resnet_original.{args.model}(num_classes={num_classes},use_norm="{args.classif_norm}",use_gumbel={args.use_gumbel_se},use_gumbel_cb={args.use_gumbel_cb})')
         except TypeError:
             model = eval(f'resnet_cifar.{args.model}(num_classes={num_classes},use_norm="{args.classif_norm}")')
             

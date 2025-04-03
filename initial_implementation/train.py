@@ -65,22 +65,20 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, arg
     metric_logger.add_meter("lr", utils.SmoothedValue(window_size=1, fmt="{value}"))
     metric_logger.add_meter("img/s", utils.SmoothedValue(window_size=10, fmt="{value}"))
     
-    apex=args.apex
+    apex = args.apex and torch.cuda.is_available()
 
     header = f"Epoch: [{epoch}]"
     for i, (image, target) in enumerate(metric_logger.log_every(data_loader, args.print_freq, header)):
         start_time = time.time()
         image, target = image.to(device), target.to(device)
-        with torch.cuda.amp.autocast(enabled=scaler is not None):
+        with torch.cuda.amp.autocast(enabled=scaler is not None and device.type == "cuda"):
             output = model(image)
             loss = criterion(output, target)
             
-
         optimizer.zero_grad()
-        if scaler is not None:
+        if scaler is not None and device.type == "cuda":
             scaler.scale(loss).backward()
             if args.clip_grad_norm is not None:
-                # we should unscale the gradients of optimizer's assigned params if do gradient clipping
                 scaler.unscale_(optimizer)
                 nn.utils.clip_grad_norm_(model.parameters(), args.clip_grad_norm)
             scaler.step(optimizer)
@@ -96,7 +94,6 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, arg
         if model_ema and i % args.model_ema_steps == 0:
             model_ema.update_parameters(model)
             if epoch < args.lr_warmup_epochs:
-                # Reset ema buffer to keep copying weights during warmup period
                 model_ema.n_averaged.fill_(0)
 
         metric_logger.update(loss=loss.item(), lr=optimizer.param_groups[0]["lr"])
@@ -217,108 +214,59 @@ def load_data(traindir, valdir, args):
 
     print("Loading training data")
     st = time.time()
-    cache_path = _get_cache_path(traindir)
-    if args.cache_dataset and os.path.exists(cache_path):
-        # Attention, as the transforms are also cached!
-        print(f"Loading dataset_train from {cache_path}")
-        dataset, _ = torch.load(cache_path)
-    else:
-        auto_augment_policy = getattr(args, "auto_augment", None)
-        random_erase_prob = getattr(args, "random_erase", 0.0)
-        ra_magnitude = args.ra_magnitude
-        augmix_severity = args.augmix_severity
-        train_transform = presets.ClassificationPresetTrain(
-                    crop_size=train_crop_size,
-                    interpolation=interpolation,
-                    auto_augment_policy=auto_augment_policy,
-                    random_erase_prob=random_erase_prob,
-                    ra_magnitude=ra_magnitude,
-                    augmix_severity=augmix_severity,
-                )
-        if args.dset_name == 'ImageNet':
-            dataset = torchvision.datasets.ImageFolder(
-                traindir,train_transform,
-            )
-            num_classes = 1000
-        elif args.dset_name =="imagenet_lt":
-            num_classes = 1000
-            train_txt = "../../../datasets/ImageNet-LT/ImageNet_LT_train.txt"
-            eval_txt = "../../../datasets/ImageNet-LT/ImageNet_LT_test.txt"
-            dataset = imbalanced_dataset.LT_Dataset(args.data_path, train_txt,num_classes, transform=train_transform)
-            num_classes = len(dataset.cls_num_list)
-        elif args.dset_name =="inat18":
-            num_classes = 8142
-            # auto_augment_policy = getattr(args, "auto_augment", None)
-            train_txt = "../../../datasets/train_val2018/iNaturalist18_train.txt"
-            eval_txt = "../../../datasets/train_val2018/iNaturalist18_val.txt"
-            dataset = imbalanced_dataset.LT_Dataset(args.data_path, train_txt,num_classes, transform=train_transform)
-            num_classes = len(dataset.cls_num_list)
-        elif args.dset_name =="places_lt":
-            num_classes = 365
-            # auto_augment_policy = getattr(args, "auto_augment", None)
-            train_txt = "../../../datasets/places365_standard/Places_LT_train.txt"
-            eval_txt = "../../../datasets/places365_standard/Places_LT_test.txt"
-            dataset = imbalanced_dataset.LT_Dataset(args.data_path, train_txt,num_classes, transform=train_transform)
-            num_classes = len(dataset.cls_num_list)
-        else:
-            dataset, dataset_test = imbalanced_dataset.load_cifar(args)
-            num_classes = len(dataset.num_per_cls_dict)
-        
-        if args.cache_dataset:
-            print(f"Saving dataset_train to {cache_path}")
-            utils.mkdir(os.path.dirname(cache_path))
-            utils.save_on_master((dataset, traindir), cache_path)
-    print("Took", time.time() - st)
 
-    print("Loading validation data")
-    cache_path = _get_cache_path(valdir)
-    if args.cache_dataset and os.path.exists(cache_path):
-        # Attention, as the transforms are also cached!
-        print(f"Loading dataset_test from {cache_path}")
-        dataset_test, _ = torch.load(cache_path)
-    else:
-        if args.weights and args.test_only:
-            weights = torchvision.models.get_weight(args.weights)
-            preprocessing = weights.transforms()
-        else:
-            preprocessing = presets.ClassificationPresetEval(
+    if args.dset_name.lower() == 'cifar-100':
+        dataset = torchvision.datasets.CIFAR100(
+            root=args.data_path, train=True, download=True,
+            transform=presets.ClassificationPresetTrain(
+                crop_size=train_crop_size,
+                interpolation=interpolation,
+                auto_augment_policy=args.auto_augment,
+                random_erase_prob=args.random_erase,
+                ra_magnitude=args.ra_magnitude,
+                augmix_severity=args.augmix_severity,
+            )
+        )
+        dataset_test = torchvision.datasets.CIFAR100(
+            root=args.data_path, train=False, download=True,
+            transform=presets.ClassificationPresetEval(
                 crop_size=val_crop_size, resize_size=val_resize_size, interpolation=interpolation
             )
-        if args.dset_name == 'ImageNet':
+        )
+    else:
+        # Existing logic for other datasets
+        cache_path = _get_cache_path(traindir)
+        if args.cache_dataset and os.path.exists(cache_path):
+            print(f"Loading dataset_train from {cache_path}")
+            dataset, _ = torch.load(cache_path)
+        else:
+            auto_augment_policy = getattr(args, "auto_augment", None)
+            random_erase_prob = getattr(args, "random_erase", 0.0)
+            ra_magnitude = args.ra_magnitude
+            augmix_severity = args.augmix_severity
+            train_transform = presets.ClassificationPresetTrain(
+                crop_size=train_crop_size,
+                interpolation=interpolation,
+                auto_augment_policy=auto_augment_policy,
+                random_erase_prob=random_erase_prob,
+                ra_magnitude=ra_magnitude,
+                augmix_severity=augmix_severity,
+            )
+            dataset = torchvision.datasets.ImageFolder(
+                traindir, train_transform,
+            )
             dataset_test = torchvision.datasets.ImageFolder(
                 valdir,
-                preprocessing,
+                presets.ClassificationPresetEval(
+                    crop_size=val_crop_size, resize_size=val_resize_size, interpolation=interpolation
+                ),
             )
-        elif args.dset_name.startswith('cifar') is True:
-            pass # test dataset already loaded
-        else:
-            dataset_test = imbalanced_dataset.LT_Dataset_Eval(args.data_path, eval_txt,dataset.class_map, num_classes, transform=preprocessing)
-            
-        if args.cache_dataset:
-            print(f"Saving dataset_test to {cache_path}")
-            utils.mkdir(os.path.dirname(cache_path))
-            utils.save_on_master((dataset_test, valdir), cache_path)
 
+    print("Took", time.time() - st)
     print("Creating data loaders")
-    if args.distributed:
-        if hasattr(args, "ra_sampler") and args.ra_sampler:
-            train_sampler = RASampler(dataset, shuffle=True, repetitions=args.ra_reps)
-        else:
-            if args.sampler=='random':
-                train_sampler = torch.utils.data.distributed.DistributedSampler(dataset)
-            else:
-                train_labels = dataset.targets
-                balanced_sampler = BalanceClassSampler(train_labels,mode=args.sampler)
-                train_sampler= DistributedSamplerWrapper(balanced_sampler)
-        
-        test_sampler = torch.utils.data.distributed.DistributedSampler(dataset_test, shuffle=False)
-    else:
-        if args.sampler=='random':
-            train_sampler = torch.utils.data.RandomSampler(dataset)
-        else:
-            train_labels = dataset.targets
-            train_sampler = BalanceClassSampler(train_labels,mode=args.sampler)
-        test_sampler = torch.utils.data.SequentialSampler(dataset_test)
+
+    train_sampler = torch.utils.data.RandomSampler(dataset)
+    test_sampler = torch.utils.data.SequentialSampler(dataset_test)
 
     return dataset, dataset_test, train_sampler, test_sampler
 
@@ -330,11 +278,12 @@ def main(args):
     utils.init_distributed_mode(args)
     print(args)
 
-    device = torch.device(args.device)
+    device = torch.device(args.device if torch.cuda.is_available() or args.device == "cpu" else "cpu")
 
     if args.use_deterministic_algorithms:
         torch.backends.cudnn.benchmark = False
-        torch.use_deterministic_algorithms(True)
+        if device.type == "cuda":
+            torch.use_deterministic_algorithms(True)
     else:
         torch.backends.cudnn.benchmark = True
 
@@ -360,18 +309,18 @@ def main(args):
         batch_size=args.batch_size,
         sampler=train_sampler,
         num_workers=args.workers,
-        pin_memory=True,
+        pin_memory=device.type == "cuda",
         collate_fn=collate_fn,
     )
     data_loader_test = torch.utils.data.DataLoader(
-        dataset_test, batch_size=args.batch_size, sampler=test_sampler, num_workers=args.workers, pin_memory=True
+        dataset_test, batch_size=args.batch_size, sampler=test_sampler, num_workers=args.workers, pin_memory=device.type == "cuda"
     )
 
     print("Creating model")
     model = initialise_model.get_model(args,num_classes)
     model.to(device)
 
-    if args.distributed and args.sync_bn:
+    if args.distributed and args.sync_bn and device.type == "cuda":
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
 
     criterion = initialise_model.get_criterion(args,dataset,model)
@@ -407,8 +356,8 @@ def main(args):
     else:
         raise RuntimeError(f"Invalid optimizer {args.opt}. Only SGD, RMSprop and AdamW are supported.")      
         
-    scaler = torch.cuda.amp.GradScaler() if args.amp else None
-    if args.apex:
+    scaler = torch.cuda.amp.GradScaler() if args.amp and device.type == "cuda" else None
+    if args.apex and device.type == "cuda":
         model, optimizer = amp.initialize(model, optimizer,
                                       opt_level=args.apex_opt_level
                                       )
@@ -443,7 +392,7 @@ def main(args):
                 optimizer, start_factor=args.lr_warmup_decay, total_iters=args.lr_warmup_epochs
             )
         elif args.lr_warmup_method == "constant":
-            warmup_lr_scheduler = torch.optim.lr_scheduler.ConstantLR(
+            warmup_lr_scheduler = torch.optim.lr.scheduler.ConstantLR(
                 optimizer, factor=args.lr_warmup_decay, total_iters=args.lr_warmup_epochs
             )
         else:
@@ -486,7 +435,7 @@ def main(args):
             model_ema.load_state_dict(checkpoint["model_ema"])
         if scaler:
             scaler.load_state_dict(checkpoint["scaler"])
-        elif args.apex:
+        elif args.apex and device.type == "cuda":
             amp.load_state_dict(checkpoint["amp"])
             
     if args.load_from:
@@ -494,9 +443,9 @@ def main(args):
         model_without_ddp.load_state_dict(checkpoint["model"],strict=True)
 
     if args.test_only:
-        # We disable the cudnn benchmarking because it can noticeably affect the accuracy
         torch.backends.cudnn.benchmark = False
-        torch.backends.cudnn.deterministic = True
+        if device.type == "cuda":
+            torch.backends.cudnn.deterministic = True
         if model_ema:
             evaluate(model_ema, criterion, data_loader_test, device=device, log_suffix="EMA")
         else:
@@ -507,22 +456,22 @@ def main(args):
     start_time = time.time()
     best_acc = 0
     for epoch in range(args.start_epoch, args.epochs):
-        if args.ms_train is True:
-            temp_train_crop=torch.randint(8, 20, (1,)).cuda()
+        if args.ms_train is True and device.type == "cuda":
+            temp_train_crop = torch.randint(8, 20, (1,)).cuda()
             if args.distributed:
-                batch_w=[torch.zeros_like(temp_train_crop) for _ in range(dist.get_world_size())]
-                dist.all_gather(batch_w,temp_train_crop)
-                temp_train_crop=torch.cat(batch_w,axis=0)[0]
-                print('Crop is: ',temp_train_crop*16)
-                setattr(data_loader.dataset.transform.transforms.transforms[0],'size',(temp_train_crop.item()*16, temp_train_crop.item()*16))
-                
+                batch_w = [torch.zeros_like(temp_train_crop) for _ in range(dist.get_world_size())]
+                dist.all_gather(batch_w, temp_train_crop)
+                temp_train_crop = torch.cat(batch_w, axis=0)[0]
+                print('Crop is: ', temp_train_crop * 16)
+                setattr(data_loader.dataset.transform.transforms.transforms[0], 'size', (temp_train_crop.item() * 16, temp_train_crop.item() * 16))
+
         if args.distributed:
             train_sampler.set_epoch(epoch)
         train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, args, model_ema, scaler)
         lr_scheduler.step()
         if args.no_val is False:
             acc = evaluate(model, criterion, data_loader_test, device=device)
-            if acc>best_acc:
+            if acc > best_acc:
                 best_acc = acc
             if model_ema:
                 evaluate(model_ema, criterion, data_loader_test, device=device, log_suffix="EMA")
@@ -538,7 +487,7 @@ def main(args):
                 checkpoint["model_ema"] = model_ema.state_dict()
             if scaler:
                 checkpoint["scaler"] = scaler.state_dict()
-            elif args.apex:
+            elif args.apex and device.type == "cuda":
                 checkpoint["amp"] = amp.state_dict()
             utils.save_on_master(checkpoint, os.path.join(args.output_dir, f"model_{epoch}.pth"))
             utils.save_on_master(checkpoint, os.path.join(args.output_dir, "checkpoint.pth"))

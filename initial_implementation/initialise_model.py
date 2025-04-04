@@ -12,6 +12,7 @@ try:
 except ModuleNotFoundError:
     from initial_implementation import resnet_pytorch
     from initial_implementation import resnet_cifar
+    from initial_implementation import resnet_original
     from initial_implementation import custom
 
 def _mismatched_classifier(model,pretrained):

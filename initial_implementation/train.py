@@ -204,6 +204,21 @@ def _get_cache_path(filepath):
     return cache_path
 
 
+class CIFAR100WithClassInfo(torchvision.datasets.CIFAR100):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.class_counts = self._compute_class_counts()
+
+    def _compute_class_counts(self):
+        counts = [0] * len(self.classes)
+        for _, label in self:
+            counts[label] += 1
+        return counts
+
+    def get_cls_num_list(self):
+        return self.class_counts
+
+
 def load_data(traindir, valdir, args):
     # Data loading code
     print("Loading data")
@@ -218,7 +233,7 @@ def load_data(traindir, valdir, args):
     st = time.time()
 
     if args.dset_name.lower() == 'cifar-100-python':
-        dataset = torchvision.datasets.CIFAR100(
+        dataset = CIFAR100WithClassInfo(
             root=args.data_path, train=True, download=True,
             transform=presets.ClassificationPresetTrain(
                 crop_size=train_crop_size,
@@ -229,7 +244,7 @@ def load_data(traindir, valdir, args):
                 augmix_severity=args.augmix_severity,
             )
         )
-        dataset_test = torchvision.datasets.CIFAR100(
+        dataset_test = CIFAR100WithClassInfo(
             root=args.data_path, train=False, download=True,
             transform=presets.ClassificationPresetEval(
                 crop_size=val_crop_size, resize_size=val_resize_size, interpolation=interpolation
@@ -377,11 +392,11 @@ def main(args):
         main_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
             optimizer, milestones=args.milestones, gamma=args.lr_gamma)
     elif args.lr_scheduler == "cosineannealinglr":
-        main_lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+        main_lr_scheduler = torch.optim.lr.scheduler.CosineAnnealingLR(
             optimizer, T_max=args.epochs - args.lr_warmup_epochs, eta_min=args.lr_min
         )
     elif args.lr_scheduler == "exponentiallr":
-        main_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=args.lr_gamma)
+        main_lr_scheduler = torch.optim.lr.scheduler.ExponentialLR(optimizer, gamma=args.lr_gamma)
     else:
         raise RuntimeError(
             f"Invalid lr scheduler '{args.lr_scheduler}'. Only StepLR, CosineAnnealingLR and ExponentialLR "
@@ -390,7 +405,7 @@ def main(args):
 
     if args.lr_warmup_epochs > 0:
         if args.lr_warmup_method == "linear":
-            warmup_lr_scheduler = torch.optim.lr_scheduler.LinearLR(
+            warmup_lr_scheduler = torch.optim.lr.scheduler.LinearLR(
                 optimizer, start_factor=args.lr_warmup_decay, total_iters=args.lr_warmup_epochs
             )
         elif args.lr_warmup_method == "constant":
@@ -401,7 +416,7 @@ def main(args):
             raise RuntimeError(
                 f"Invalid warmup lr method '{args.lr_warmup_method}'. Only linear and constant are supported."
             )
-        lr_scheduler = torch.optim.lr_scheduler.SequentialLR(
+        lr_scheduler = torch.optim.lr.scheduler.SequentialLR(
             optimizer, schedulers=[warmup_lr_scheduler, main_lr_scheduler], milestones=[args.lr_warmup_epochs]
         )
     else:

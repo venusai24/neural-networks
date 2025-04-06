@@ -48,7 +48,7 @@ def get_model(args,num_classes):
     return model
 
 def get_weights(dataset):
-    per_cls_weights = torch.tensor(dataset.get_cls_num_list(),device='cuda')
+    per_cls_weights = torch.tensor(dataset.get_cls_num_list()).to('cuda')
     per_cls_weights = per_cls_weights.sum()/per_cls_weights
     return per_cls_weights
 
@@ -67,7 +67,7 @@ def get_criterion(args,dataset,model=None):
 
 
 def initialise_classifier(args,model,num_classes):
-    num_classes = torch.tensor([num_classes])
+    num_classes = torch.tensor(num_classes)
     if args.criterion == 'bce':
         if args.dset_name.startswith('cifar'):
             torch.nn.init.normal_(model.linear.weight.data,0.0,0.001)
@@ -82,5 +82,5 @@ def initialise_classifier(args,model,num_classes):
             print('no bias in classifier head')
             pass
     return model
-        
-    
+
+

@@ -44,12 +44,12 @@ class SmoothedValue:
 
     @property
     def median(self):
-        d = torch.tensor(list(self.deque))
+        d = torch.as_tensor(self.deque)
         return d.median().item()
 
     @property
     def avg(self):
-        d = torch.tensor(list(self.deque), dtype=torch.float32)
+        d = torch.tensor((self.deque), dtype=torch.float32)
         return d.mean().item()
 
     @property

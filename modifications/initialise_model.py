@@ -6,14 +6,16 @@ import torch
 import torch.nn as nn
 try:
     import resnet_pytorch
-    import resnet_cifar
+    import resnet_cifar_modified as resnet_cifar
     import resnet_original
     import custom
 except ModuleNotFoundError:
-    from initial_implementation import resnet_pytorch_modified as resnet_pytorch
-    from initial_implementation import resnet_cifar
-    from initial_implementation import resnet_original
-    from initial_implementation import custom
+    from modifications import resnet_pytorch_modified 
+    from modifications import resnet_cifar_modified as resnet_cifar
+    from modifications import resnet_pytorch
+    from modifications import resnet_cifar
+    from modifications import resnet_original
+    from modifications import custom
 
 def _mismatched_classifier(model,pretrained):
     classifier_name, old_classifier = model._modules.popitem()

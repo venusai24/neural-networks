@@ -101,8 +101,8 @@ def _weights_init(m):
     if isinstance(m, nn.Linear) or isinstance(m, nn.Conv2d):
         init.kaiming_normal_(m.weight)
 
-def resnet20_orig():
-    return ResNet(BasicBlock, [3, 3, 3])
+def resnet20_orig(num_classes = 100):
+    return ResNet(BasicBlock, [3, 3, 3], num_classes=num_classes)
 
 def resnet32_orig(num_classes=10):
     return ResNet(BasicBlock, [5, 5, 5], num_classes=num_classes)

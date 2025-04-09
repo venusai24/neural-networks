@@ -10,7 +10,7 @@ try:
     import resnet_original
     import custom
 except ModuleNotFoundError:
-    from initial_implementation import resnet_pytorch
+    from initial_implementation import resnet_pytorch_modified as resnet_pytorch
     from initial_implementation import resnet_cifar
     from initial_implementation import resnet_original
     from initial_implementation import custom

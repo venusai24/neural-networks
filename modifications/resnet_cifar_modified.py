@@ -5,6 +5,8 @@ import torch.nn.init as init
 from torch.nn import Parameter
 import math
 
+__all__ = ['ResNet_s', 'resnet20', 'resnet32', 'resnet44', 'resnet56', 'resnet110', 'resnet1202']
+
 class HybridAPA(nn.Module):
     """Integrated APA + AdAct + Frequency-Conditioned Activation"""
     def __init__(self, num_parameters=1):
@@ -42,16 +44,24 @@ def _weights_init(m):
     if isinstance(m, nn.Linear) or isinstance(m, nn.Conv2d):
         init.kaiming_normal_(m.weight)
 
+class LambdaLayer(nn.Module):
+    def __init__(self, lambd):
+        super().__init__()
+        self.lambd = lambd
+
+    def forward(self, x):
+        return self.lambd(x)
+
 class BasicBlock(nn.Module):
     expansion = 1
 
-    def __init__(self, in_planes, planes, stride=1, option='A'):
+    def __init__(self, in_planes, planes, stride=1, option='A', use_gumbel=False):
         super().__init__()
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(planes)
-        self.activation = HybridAPA()
+        self.activation = HybridAPA() if use_gumbel else nn.ReLU()
         
         self.shortcut = nn.Sequential()
         if stride != 1 or in_planes != planes:
@@ -71,27 +81,32 @@ class BasicBlock(nn.Module):
         out = self.activation(out)
         return out
 
-class ResNet_CIFAR(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=100):
+class ResNet_s(nn.Module):
+    def __init__(self, block, num_blocks, num_classes=100, use_norm=None, use_gumbel=False):
         super().__init__()
         self.in_planes = 16
+        self.use_gumbel = use_gumbel
 
         self.conv1 = nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(16)
-        self.activation = HybridAPA()
+        self.activation = HybridAPA() if use_gumbel else nn.ReLU()
         
         self.layer1 = self._make_layer(block, 16, num_blocks[0], stride=1)
         self.layer2 = self._make_layer(block, 32, num_blocks[1], stride=2)
         self.layer3 = self._make_layer(block, 64, num_blocks[2], stride=2)
         
-        self.linear = nn.Linear(64, num_classes)
+        if use_norm == 'cosine':
+            self.linear = nn.utils.weight_norm(nn.Linear(64, num_classes), dim=1)
+        else:
+            self.linear = nn.Linear(64, num_classes)
+        
         self.apply(_weights_init)
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1]*(num_blocks-1)
         layers = []
         for stride in strides:
-            layers.append(block(self.in_planes, planes, stride))
+            layers.append(block(self.in_planes, planes, stride, use_gumbel=self.use_gumbel))
             self.in_planes = planes * block.expansion
         return nn.Sequential(*layers)
 
@@ -105,8 +120,11 @@ class ResNet_CIFAR(nn.Module):
         out = self.linear(out)
         return out
 
-def resnet20(num_classes=100):
-    return ResNet_CIFAR(BasicBlock, [3, 3, 3], num_classes=num_classes)
+def resnet20(num_classes=100, use_norm=None, use_gumbel=False):
+    return ResNet_s(BasicBlock, [3, 3, 3], 
+                   num_classes=num_classes, 
+                   use_norm=use_norm,
+                   use_gumbel=use_gumbel)
 
 def test(net):
     total_params = sum(p.numel() for p in net.parameters() if p.requires_grad)
@@ -114,6 +132,6 @@ def test(net):
     print("Architecture:\n", net)
 
 if __name__ == "__main__":
-    model = resnet20(num_classes=100)
+    # Example usage
+    model = resnet20(num_classes=100, use_gumbel=True)
     test(model)
-        

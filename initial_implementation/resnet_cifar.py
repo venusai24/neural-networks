@@ -649,8 +649,7 @@ class ResNet_TwoBranch(nn.Module):
 def resnet20(num_classes=100, use_norm=None, use_gumbel=False):
     return ResNet_s(BasicBlock, [3, 3, 3], 
                    num_classes=num_classes, 
-                   use_norm=use_norm,
-                   use_gumbel=use_gumbel)
+                   use_norm=use_norm)
 
 def resnet32(num_classes=10, use_norm=None,use_gumbel=False,use_gumbel_cb=False):
     if use_gumbel is False:

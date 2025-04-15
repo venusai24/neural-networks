@@ -647,8 +647,8 @@ class ResNet_TwoBranch(nn.Module):
         return logits1,logits2
 
 
-def resnet20():
-    return ResNet_s(BasicBlock, [3, 3, 3])
+def resnet20(num_classes = 100):
+    return ResNet_s(BasicBlock, [3, 3, 3], num_classes= num_classes)
 
 
 def resnet32(num_classes=10, use_norm=None,use_gumbel=False,use_gumbel_cb=False):

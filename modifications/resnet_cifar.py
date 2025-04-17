@@ -51,7 +51,9 @@ class ResNet20APA(nn.Module):
         self.layer2 = self._make_layer(BasicBlockAPA, 32, 3, stride=2)
         self.layer3 = self._make_layer(BasicBlockAPA, 64, 3, stride=2)
         self.linear = nn.Linear(256, num_classes)
-        
+        # Add these lines:
+        self.kappa_param = nn.Parameter(torch.tensor(1.0))
+        self.lambda_param = nn.Parameter(torch.tensor(1.0))
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)

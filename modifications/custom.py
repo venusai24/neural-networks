@@ -8,6 +8,9 @@ class APAFocalLoss(nn.Module):
         self.gamma = gamma
 
     def forward(self, logits, targets, kappa, lambda_):
+        # Convert targets to one-hot if needed
+        if targets.dim() == 1 or (targets.dim() == 2 and targets.size(1) == 1):
+            targets = torch.nn.functional.one_hot(targets, num_classes=logits.size(1)).float()
         probs = torch.sigmoid(logits)
         focal_weight = (1 - probs) ** self.gamma
         adaptive_weight = torch.exp(-torch.abs(kappa * logits - lambda_))

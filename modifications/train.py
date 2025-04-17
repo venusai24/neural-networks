@@ -74,7 +74,10 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, arg
 
     for i, (image, target) in enumerate(metric_logger.log_every(data_loader, args.print_freq, header)):
         start_time = time.time()
-        image = F.interpolate(image, size=(256, 256), mode="bilinear", align_corners=False)
+        if args.dset_name.lower().startswith('cifar'):
+            image = F.interpolate(image, size=(32, 32), mode="bilinear", align_corners=False)
+        else:
+            image = F.interpolate(image, size=(256, 256), mode="bilinear", align_corners=False)
         image, target = image.to(device), target.to(device)
 
         # Use mixed precision

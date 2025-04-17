@@ -84,7 +84,9 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, arg
         with torch.cuda.amp.autocast(enabled=scaler is not None and device.type == "cuda"):
             output = model(image)
             if args.criterion == "APAFocalLoss":
-                # Pass kappa and lambda_ from the model (adjust as needed)
+                # Ensure model has kappa_param and lambda_param
+                if not (hasattr(model, "kappa_param") and hasattr(model, "lambda_param")):
+                    raise AttributeError("Model must have 'kappa_param' and 'lambda_param' attributes for APAFocalLoss.")
                 loss = criterion(output, target, model.kappa_param, model.lambda_param) / accumulation_steps
             else:
                 loss = criterion(output, target) / accumulation_steps  # Scale loss for accumulation

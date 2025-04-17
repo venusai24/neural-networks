@@ -83,7 +83,11 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, arg
         # Use mixed precision
         with torch.cuda.amp.autocast(enabled=scaler is not None and device.type == "cuda"):
             output = model(image)
-            loss = criterion(output, target) / accumulation_steps  # Scale loss for accumulation
+            if args.criterion == "APAFocalLoss":
+                # Pass kappa and lambda_ from the model (adjust as needed)
+                loss = criterion(output, target, model.kappa_param, model.lambda_param) / accumulation_steps
+            else:
+                loss = criterion(output, target) / accumulation_steps  # Scale loss for accumulation
 
         # Backpropagation
         if scaler is not None and device.type == "cuda":

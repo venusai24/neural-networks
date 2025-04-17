@@ -337,7 +337,7 @@ def main(args):
         torch.backends.cudnn.benchmark = True
 
     train_dir = os.path.join(args.data_path, "train")
-    val_dir = os.join(args.data_path, "val")
+    val_dir = os.path.join(args.data_path, "val")
     dataset, dataset_test, train_sampler, test_sampler = load_data(train_dir, val_dir, args)
 
     collate_fn = None

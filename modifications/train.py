@@ -23,7 +23,6 @@ try:
     import transforms
     import utils
     from sampler import RASampler
-    import resnet_pytorch
     import imbalanced_dataset
     import initialise_model
 except ModuleNotFoundError:
@@ -31,7 +30,6 @@ except ModuleNotFoundError:
     from modifications import transforms
     from modifications import utils
     from modifications.sampler import RASampler
-    from modifications import resnet_pytorch
     from modifications import imbalanced_dataset
     from modifications import initialise_model
     

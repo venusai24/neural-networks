@@ -1,5 +1,7 @@
 import torch.nn as nn
 import torch.nn.functional as F
+import torch
+import math
 
 # This file contains the implementation of ResNet architectures specifically designed for CIFAR datasets.
 # Modified to include Adaptive Parametric Activation (APA) enhancements for CIFAR-100 LT.

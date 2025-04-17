@@ -63,9 +63,8 @@ def get_criterion(args,dataset,model=None):
     if args.criterion =='ce':
         return torch.nn.CrossEntropyLoss(label_smoothing=args.label_smoothing,weight=weight)
     elif args.criterion =='APAFocalLoss':
-        return custom.APAFocalLoss(dataset,weight=weight,variant=args.iif,label_smoothing=args.label_smoothing)
-    
-    
+         return custom.APAFocalLoss(gamma=getattr(args, 'gamma', 2.0))
+       
         
 def initialise_classifier(args, model, num_classes):
     """

@@ -27,13 +27,13 @@ try:
     import imbalanced_dataset
     import initialise_model
 except ModuleNotFoundError:
-    from initial_implementation import presets
-    from initial_implementation import transforms
-    from initial_implementation import utils
-    from initial_implementation.sampler import RASampler
-    from initial_implementation import resnet_pytorch
-    from initial_implementation import imbalanced_dataset
-    from initial_implementation import initialise_model
+    from modifications import presets
+    from modifications import transforms
+    from modifications import utils
+    from modifications.sampler import RASampler
+    from modifications import resnet_pytorch
+    from modifications import imbalanced_dataset
+    from modifications import initialise_model
     
 
 from torch import nn

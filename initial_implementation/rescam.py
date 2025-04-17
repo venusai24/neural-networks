@@ -7,8 +7,8 @@ import cv2
 import numpy as np
 import torchvision.transforms as transforms
 import torch
-from classification.resnet_pytorch import SE_Block
-from classification.cbam import SpatialGate
+from initial_implementation.resnet_pytorch import SE_Block
+from initial_implementation.cbam import SpatialGate
 
 class ResNetCam(nn.Module):
     def __init__(self,model,synset_loc='../../../datasets/ILSVRC/LOC_synset_mapping.txt',dataset='ImageNet-LT',transformed=True):

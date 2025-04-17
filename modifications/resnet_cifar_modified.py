@@ -71,6 +71,8 @@ class LambdaLayer(nn.Module):
         return self.lambd(x)
 
 class BasicBlock(nn.Module):
+    expansion = 1  # Add this attribute
+
     def __init__(self, in_planes, planes):
         super().__init__()
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, padding=1)
@@ -119,11 +121,14 @@ class ResNet_s(nn.Module):
         out = self.linear(out)
         return out
 
-def resnet20(num_classes=100, use_norm=None, use_gumbel=False):
-    return ResNet_s(BasicBlock, [3, 3, 3], 
-                   num_classes=num_classes, 
-                   use_norm=use_norm,
-                   use_gumbel=use_gumbel)
+def resnet20(num_classes=100, use_norm=None, use_gumbel=False, use_gumbel_cb=False):
+    return ResNet_s(
+        BasicBlock, 
+        [3, 3, 3], 
+        num_classes=num_classes, 
+        use_norm=use_norm,
+        use_gumbel=use_gumbel
+    )
 
 def test(net):
     total_params = sum(p.numel() for p in net.parameters() if p.requires_grad)

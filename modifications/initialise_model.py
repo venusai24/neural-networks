@@ -4,8 +4,8 @@ try:
     import resnet_cifar
     import custom
 except ModuleNotFoundError:
-    from initial_implementation import resnet_cifar
-    from initial_implementation import custom
+    from modifications import resnet_cifar
+    from modifications import custom
 
 def _mismatched_classifier(model,pretrained):
     classifier_name, old_classifier = model._modules.popitem()

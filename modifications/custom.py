@@ -1,5 +1,7 @@
 # Modified custom.py to include APA-Coupled Focal Loss
 
+import torch.nn as nn
+
 class APAFocalLoss(nn.Module):
     def __init__(self, gamma=2.0):
         super(APAFocalLoss, self).__init__()

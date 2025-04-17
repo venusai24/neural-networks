@@ -26,8 +26,9 @@ class HybridAPA(nn.Module):
         )
 
     def forward(self, x):
-        # Frequency adaptation
-        fft = torch.fft.rfft2(x, norm='ortho')
+        x = pad_to_power_of_two(x)  # Pad input to powers of two
+        with torch.cuda.amp.autocast(enabled=False):  # Disable AMP for FFT
+            fft = torch.fft.rfft2(x, norm='ortho')
         mag = torch.abs(fft).mean(dim=(2,3))
         hinges = self.fft_adapter(mag.unsqueeze(-1)).squeeze()
         

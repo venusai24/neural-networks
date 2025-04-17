@@ -137,6 +137,8 @@ def evaluate(model, criterion, data_loader, device, print_freq=100, log_suffix="
     num_processed_samples = 0
     with torch.inference_mode():
         for image, target in metric_logger.log_every(data_loader, print_freq, header):
+            if args.dset_name.lower().startswith('cifar'):
+                image = F.interpolate(image, size=(32, 32), mode="bilinear", align_corners=False)
             image = image.to(device, non_blocking=True)
             target = target.to(device, non_blocking=True)
             output = model(image)

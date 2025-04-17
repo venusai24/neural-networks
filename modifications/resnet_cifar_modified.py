@@ -7,6 +7,13 @@ import math
 
 __all__ = ['ResNet_s', 'resnet20', 'resnet32', 'resnet44', 'resnet56', 'resnet110', 'resnet1202']
 
+def pad_to_power_of_two(x):
+    h, w = x.shape[-2:]
+    new_h = 2 ** (h - 1).bit_length()  # Next power of two
+    new_w = 2 ** (w - 1).bit_length()  # Next power of two
+    padding = (0, new_w - w, 0, new_h - h)  # (left, right, top, bottom)
+    return F.pad(x, padding, mode="constant", value=0)
+
 class HybridAPA(nn.Module):
     """Integrated APA + AdAct + Frequency-Conditioned Activation"""
     def __init__(self, num_parameters=1):

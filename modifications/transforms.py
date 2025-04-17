@@ -8,6 +8,7 @@ from typing import Tuple
 import torch
 from torch import Tensor
 from torchvision.transforms import functional as F
+import numpy as np
 
 
 class RandomMixup(torch.nn.Module):
@@ -185,3 +186,13 @@ class RandomCutmix(torch.nn.Module):
             f")"
         )
         return s
+
+
+class ClassDependentMixup:
+    def __init__(self, min_class_size, class_sizes):
+        self.min_class_size = min_class_size
+        self.class_sizes = class_sizes
+
+    def __call__(self, x1, x2, y1, y2):
+        lam = np.random.beta(0.2 + self.min_class_size / self.class_sizes[y1], 1.0)
+        return lam * x1 + (1 - lam) * x2, lam * y1 + (1 - lam) * y2

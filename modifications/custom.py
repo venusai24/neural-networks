@@ -1,7 +1,7 @@
 # custom.py: This file defines custom loss functions for training neural networks. 
 # Specifically, it includes a Binary Cross Entropy (BCE) loss function with label 
-# smoothing and an Instance-Frequency Inverse-Frequency (IIF) loss that adjusts for class imbalance 
-# using various frequency-based weighting schemes.
+# smoothing, an Instance-Frequency Inverse-Frequency (IIF) loss that adjusts for class imbalance 
+# using various frequency-based weighting schemes, and an Adaptive Parametric Focal (APAFocal) loss.
 
 import torch
 import torch.nn as nn
@@ -63,3 +63,15 @@ class IIFLoss(nn.Module):
             out = (pred+self.iif[self.variant])
 
             return out
+
+class APAFocalLoss(nn.Module):
+    def __init__(self, gamma=2):
+        super().__init__()
+        self.gamma = gamma
+
+    def forward(self, logits, targets, kappa, lambda_):
+        probs = torch.softmax(logits, dim=-1)
+        ada_weights = torch.exp(-kappa * probs + lambda_)
+        focal_weights = (1 - probs) ** self.gamma
+        loss = -torch.sum(ada_weights * focal_weights * targets * torch.log(probs), dim=-1)
+        return loss.mean()

@@ -501,6 +501,16 @@ def main(args):
 
         if args.distributed:
             train_sampler.set_epoch(epoch)
+
+        if epoch < 50:
+            lr = 1e-3
+        elif epoch < 100:
+            lr = 5e-4
+        else:
+            lr = 1e-4
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = lr
+
         train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, args, model_ema, scaler)
         lr_scheduler.step()
         if args.no_val is False:

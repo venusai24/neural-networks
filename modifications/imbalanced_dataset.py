@@ -94,6 +94,20 @@ class IMBALANCECIFAR100(IMBALANCECIFAR10):
     cls_num = 100
     
 
+class CIFAR100WithClassInfo(torchvision.datasets.CIFAR100):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.class_counts = self._compute_class_counts()
+
+    def _compute_class_counts(self):
+        counts = [0] * len(self.classes)
+        for _, label in self:
+            counts[label] += 1
+        return counts
+
+    def get_cls_num_list(self):
+        return self.class_counts
+
 
 if __name__ == '__main__':
     transform = transforms.Compose(

@@ -467,3 +467,8 @@ def set_weight_decay(
         if len(params[key]) > 0:
             param_groups.append({"params": params[key], "weight_decay": params_weight_decay[key]})
     return param_groups
+
+
+def normalize_gradients(param, weight_grad):
+    grad_norm = torch.norm(weight_grad, p=2) + 1e-8
+    param.grad /= grad_norm

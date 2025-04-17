@@ -15,6 +15,7 @@ import torch.utils.data
 import torchvision
 import torchvision.models as models
 import torch.distributed as dist
+import torch.nn.functional as F
 
 from resnet_original import resnet32_orig, resnet20_orig, resnet44_orig, resnet56_orig, resnet110_orig, resnet1202_orig
 
@@ -27,13 +28,13 @@ try:
     import imbalanced_dataset
     import initialise_model
 except ModuleNotFoundError:
-    from modifications import presets
-    from modifications import transforms
-    from modifications import utils
-    from modifications.sampler import RASampler
-    from modifications import resnet_pytorch
-    from modifications import imbalanced_dataset
-    from modifications import initialise_model
+    from initial_implementation import presets
+    from initial_implementation import transforms
+    from initial_implementation import utils
+    from initial_implementation.sampler import RASampler
+    from initial_implementation import resnet_pytorch
+    from initial_implementation import imbalanced_dataset
+    from initial_implementation import initialise_model
     
 
 from torch import nn
@@ -75,6 +76,7 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, arg
 
     for i, (image, target) in enumerate(metric_logger.log_every(data_loader, args.print_freq, header)):
         start_time = time.time()
+        image = F.interpolate(image, size=(256, 256), mode="bilinear", align_corners=False)
         image, target = image.to(device), target.to(device)
 
         # Use mixed precision
@@ -230,6 +232,7 @@ class CIFAR100WithClassInfo(torchvision.datasets.CIFAR100):
 
     def get_cls_num_list(self):
         return self.class_counts
+
 
 
 def load_data(traindir, valdir, args):
@@ -501,16 +504,6 @@ def main(args):
 
         if args.distributed:
             train_sampler.set_epoch(epoch)
-
-        if epoch < 50:
-            lr = 1e-3
-        elif epoch < 100:
-            lr = 5e-4
-        else:
-            lr = 1e-4
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = lr
-
         train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, args, model_ema, scaler)
         lr_scheduler.step()
         if args.no_val is False:

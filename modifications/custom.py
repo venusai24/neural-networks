@@ -1,77 +1,13 @@
-# custom.py: This file defines custom loss functions for training neural networks. 
-# Specifically, it includes a Binary Cross Entropy (BCE) loss function with label 
-# smoothing, an Instance-Frequency Inverse-Frequency (IIF) loss that adjusts for class imbalance 
-# using various frequency-based weighting schemes, and an Adaptive Parametric Focal (APAFocal) loss.
-
-import torch
-import torch.nn as nn
-import numpy as np
-from scipy.special import ndtri
-import itertools
-
-class BCE(nn.Module):
-    def __init__(self,reduction='mean',label_smoothing=0.0,weight=None):
-        super(BCE, self).__init__()
-        self.reduction = reduction
-        self.label_smoothing = label_smoothing  
-        self.loss_fcn = nn.BCEWithLogitsLoss(reduction='none',weight=weight)
-        
-    def forward(self, pred, targets):
-        nc=pred.shape[-1]
-        if (targets.size() == pred.size()) is False:
-            y_onehot = torch.cuda.FloatTensor(pred.shape)
-            y_onehot.zero_()
-            y_onehot.scatter_(1, targets.unsqueeze(1), 1)
-            y_onehot_smoothed = y_onehot*(1-self.label_smoothing) + self.label_smoothing/nc
-        else:
-            y_onehot_smoothed = targets*(1-self.label_smoothing) + self.label_smoothing/nc
-
-
-        loss = self.loss_fcn(pred,y_onehot_smoothed)
-            
-        if self.reduction=='mean':
-            loss=loss.mean()
-        elif self.reduction=='sum':
-            loss=loss.sum()/y_onehot_smoothed.sum()
-             
-        return loss
-
-class IIFLoss(nn.Module):
-    # BCEwithLogitLoss() with reduced missing label effects.
-    def __init__(self,dataset,variant='rel',device='cuda',weight=None,label_smoothing=None):
-        super(IIFLoss, self).__init__()
-        self.loss_fcn = torch.nn.CrossEntropyLoss(label_smoothing=label_smoothing,weight=weight)
-        self.variant = variant
-        freqs = np.array(dataset.get_cls_num_list())
-        iif={}
-        iif['raw']= np.log(freqs.sum()/freqs)
-        iif['smooth'] = np.log((freqs.sum()+1)/(freqs+1))+1
-        iif['rel'] = np.log((freqs.sum()-freqs)/freqs)
-        
-        iif['normit'] = -ndtri(freqs/freqs.sum())
-        iif['gombit'] = -np.log(-np.log(1-(freqs/freqs.sum())))
-        iif['base2'] = np.log2(freqs.sum()/freqs)
-        iif['base10'] = np.log10(freqs.sum()/freqs)
-        self.iif = {k: torch.tensor([v],dtype=torch.float).to(device,non_blocking=True) for k, v in iif.items()}
-        
-    def forward(self, pred, targets=None,infer=False):
-    
-        if infer is False:
-            loss = self.loss_fcn(pred,targets)
-            return loss
-        else:
-            out = (pred+self.iif[self.variant])
-
-            return out
+# Modified custom.py to include APA-Coupled Focal Loss
 
 class APAFocalLoss(nn.Module):
-    def __init__(self, gamma=2):
-        super().__init__()
+    def __init__(self, gamma=2.0):
+        super(APAFocalLoss, self).__init__()
         self.gamma = gamma
 
     def forward(self, logits, targets, kappa, lambda_):
-        probs = torch.softmax(logits, dim=-1)
-        ada_weights = torch.exp(-kappa * probs + lambda_)
-        focal_weights = (1 - probs) ** self.gamma
-        loss = -torch.sum(ada_weights * focal_weights * targets * torch.log(probs), dim=-1)
+        probs = torch.sigmoid(logits)
+        focal_weight = (1 - probs) ** self.gamma
+        adaptive_weight = torch.exp(-torch.abs(kappa * logits - lambda_))
+        loss = -adaptive_weight * focal_weight * targets * torch.log(probs + 1e-8)
         return loss.mean()

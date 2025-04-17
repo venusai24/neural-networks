@@ -234,13 +234,6 @@ class CIFAR100WithClassInfo(torchvision.datasets.CIFAR100):
         return self.class_counts
 
 
-def pad_to_power_of_two(x):
-    h, w = x.shape[-2:]
-    new_h = 2 ** (h - 1).bit_length()  # Next power of two
-    new_w = 2 ** (w - 1).bit_length()  # Next power of two
-    padding = (0, new_w - w, 0, new_h - h)  # (left, right, top, bottom)
-    return F.pad(x, padding, mode="constant", value=0)
-
 
 def load_data(traindir, valdir, args):
     # Data loading code

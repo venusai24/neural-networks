@@ -8,6 +8,7 @@ import os
 import time
 import warnings
 import sys
+import pandas as pd
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -351,7 +352,7 @@ def main(args):
     )
 
     print("Creating model")
-    model = initialise_model.get_model(args,num_classes)
+    model = initialise_model.get_model(args, num_classes, model_name="resnet20_apa")
     model.to(device)
 
     if args.distributed and args.sync_bn and device.type == "cuda":

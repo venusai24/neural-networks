@@ -62,24 +62,26 @@ def get_criterion(args,dataset,model=None):
         weight=None
     if args.criterion =='ce':
         return torch.nn.CrossEntropyLoss(label_smoothing=args.label_smoothing,weight=weight)
-    elif args.criterion =='iif':
-        return custom.IIFLoss(dataset,weight=weight,variant=args.iif,label_smoothing=args.label_smoothing)
-    elif args.criterion =='bce':
-        return custom.BCE(label_smoothing=args.label_smoothing,reduction=args.reduction)
+    elif args.criterion =='APAFocalLoss':
+        return custom.APAFocalLoss(dataset,weight=weight,variant=args.iif,label_smoothing=args.label_smoothing)
+    
+    
         
-def initialise_classifier(args,model,num_classes):
-    num_classes = torch.tensor(num_classes)
-    if args.criterion == 'bce':
-        if args.dset_name.startswith('cifar'):
-            torch.nn.init.normal_(model.linear.weight.data,0.0,0.001)
-        else:
-            torch.nn.init.normal_(model.fc.weight.data,0.0,0.001)
+def initialise_classifier(args, model, num_classes):
+    """
+    Initializes the classifier layer weights and bias for APA Focal Loss.
+    """
+    if args.criterion == 'APAFocalLoss':
+        # For CIFAR models, classifier is usually model.linear; otherwise model.fc
         try:
             if args.dset_name.startswith('cifar'):
-                torch.nn.init.constant_(model.linear.bias.data,-6.0)
+                torch.nn.init.normal_(model.linear.weight.data, 0.0, 0.001)
+                if hasattr(model.linear, 'bias') and model.linear.bias is not None:
+                    torch.nn.init.constant_(model.linear.bias.data, 0.0)
             else:
-                torch.nn.init.constant_(model.fc.bias.data,-6.0)
+                torch.nn.init.normal_(model.fc.weight.data, 0.0, 0.001)
+                if hasattr(model.fc, 'bias') and model.fc.bias is not None:
+                    torch.nn.init.constant_(model.fc.bias.data, 0.0)
         except AttributeError:
-            print('no bias in classifier head')
-            pass
+            print('No classifier head found or no bias in classifier head')
     return model

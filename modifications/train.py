@@ -352,7 +352,7 @@ def main(args):
     )
 
     print("Creating model")
-    model = initialise_model.get_model(args, num_classes, model_name="resnet20_apa")
+    model = initialise_model.get_model(args, num_classes)
     model.to(device)
 
     if args.distributed and args.sync_bn and device.type == "cuda":

@@ -1,5 +1,5 @@
 # Modified custom.py to include APA-Coupled Focal Loss
-
+import torch
 import torch.nn as nn
 
 class APAFocalLoss(nn.Module):

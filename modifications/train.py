@@ -142,11 +142,14 @@ def evaluate(model, criterion, data_loader, device, print_freq=100, log_suffix="
             image = image.to(device, non_blocking=True)
             target = target.to(device, non_blocking=True)
             output = model(image)
-            loss = criterion(output, target)
+            if args.criterion == "APAFocalLoss":
+                if not (hasattr(model, "kappa_param") and hasattr(model, "lambda_param")):
+                    raise AttributeError("Model must have 'kappa_param' and 'lambda_param' attributes for APAFocalLoss.")
+                loss = criterion(output, target, model.kappa_param, model.lambda_param)
+            else:
+                loss = criterion(output, target)
             if hasattr(criterion, "iif"):
                 output = criterion(output, infer=True)
-            # FIXME need to take into account that the datasets
-            # could have been padded in distributed setup
             batch_size = image.shape[0]
             metric_logger.update(loss=loss.item())
             acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
@@ -334,7 +337,7 @@ def main(args):
         torch.backends.cudnn.benchmark = True
 
     train_dir = os.path.join(args.data_path, "train")
-    val_dir = os.path.join(args.data_path, "val")
+    val_dir = os.join(args.data_path, "val")
     dataset, dataset_test, train_sampler, test_sampler = load_data(train_dir, val_dir, args)
 
     collate_fn = None

@@ -28,6 +28,7 @@ class BasicBlockAPA(nn.Module):
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
         self.aglu1 = AGLU()
+        self.dropout = nn.Dropout(p=0.1)
 
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(planes)
@@ -42,9 +43,11 @@ class BasicBlockAPA(nn.Module):
 
     def forward(self, x):
         out = self.aglu1(self.bn1(self.conv1(x)))
+        out = self.dropout(out)
         out = self.bn2(self.conv2(out))
         out += self.shortcut(x)
         out = self.aglu2(out)
+        out = self.dropout(out)
         return out
 
 

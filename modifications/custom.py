@@ -6,7 +6,7 @@ import torch.nn as nn
 
 
 class LDAMLoss(nn.Module):
-    def __init__(self, cls_num_list, max_m=0.5, weight=None, s=30):
+    def __init__(self, cls_num_list, max_m=0.5, weight=None, s=17):
         super(LDAMLoss, self).__init__()
         m_list = 1.0 / np.sqrt(np.sqrt(cls_num_list))
         m_list = m_list * (max_m / np.max(m_list))
@@ -21,8 +21,6 @@ class LDAMLoss(nn.Module):
         # Ensure target is torch.long
         target = target.long()
 
-        print("x shape:", x.shape)
-        print("target shape:", target.shape)
 
         index = torch.zeros_like(x, dtype=torch.long)
         index.scatter_(1, target.view(-1, 1), 1)

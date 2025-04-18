@@ -63,7 +63,7 @@ def get_criterion(args,dataset,model=None):
     if args.criterion =='ce':
         return torch.nn.CrossEntropyLoss(label_smoothing=0.1,weight=weight)
     elif args.criterion =='ldam':
-         return custom.LDAMLoss(dataset.get_cls_num_list(),max_m=0.5,weight=weight,s=30)
+         return custom.LDAMLoss(dataset.get_cls_num_list(),max_m=0.5,weight=weight,s=15)
        
         
 def initialise_classifier(args, model, num_classes):

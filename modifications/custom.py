@@ -21,7 +21,6 @@ class LDAMLoss(nn.Module):
         # Ensure target is torch.long
         target = target.long()
 
-
         index = torch.zeros_like(x, dtype=torch.long)
         index.scatter_(1, target.view(-1, 1), 1)
         index_float = index.type(torch.float32)
@@ -29,4 +28,4 @@ class LDAMLoss(nn.Module):
         batch_m = torch.matmul(self.m_list[None, :], index_float.transpose(0, 1)).view(-1, 1)
         x_m = x - index_float * batch_m
         output = self.s * x_m
-        return F.cross_entropy(output, target, weight=self.weight)
+        return F.cross_entropy(output, target, weight=self.weight, label_smoothing=0.1)

@@ -80,16 +80,14 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, arg
             image = F.interpolate(image, size=(256, 256), mode="bilinear", align_corners=False)
         image, target = image.to(device), target.to(device)
 
+        # Convert one-hot targets to class indices for LDAMLoss
+        if args.criterion == "ldam" and target.ndim == 2:
+            target = target.argmax(dim=1)
+
         # Use mixed precision
         with torch.cuda.amp.autocast(enabled=scaler is not None and device.type == "cuda"):
             output = model(image)
-            if args.criterion == "APAFocalLoss":
-                # Ensure model has kappa_param and lambda_param
-                if not (hasattr(model, "kappa_param") and hasattr(model, "lambda_param")):
-                    raise AttributeError("Model must have 'kappa_param' and 'lambda_param' attributes for APAFocalLoss.")
-                loss = criterion(output, target, model.kappa_param, model.lambda_param) / accumulation_steps
-            else:
-                loss = criterion(output, target) / accumulation_steps  # Scale loss for accumulation
+            loss = criterion(output, target) / accumulation_steps  # Scale loss for accumulation
 
         # Backpropagation
         if scaler is not None and device.type == "cuda":
@@ -129,7 +127,7 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, arg
         
 
 
-def evaluate(model, criterion, data_loader, device, print_freq=100, log_suffix=""):
+def evaluate(model, criterion, data_loader, device, args, print_freq=100, log_suffix=""):
     model.eval()
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = f"Test: {log_suffix}"
@@ -141,13 +139,11 @@ def evaluate(model, criterion, data_loader, device, print_freq=100, log_suffix="
                 image = F.interpolate(image, size=(32, 32), mode="bilinear", align_corners=False)
             image = image.to(device, non_blocking=True)
             target = target.to(device, non_blocking=True)
+            # Convert one-hot targets to class indices for LDAMLoss
+            if args.criterion == "ldam" and target.ndim == 2:
+                target = target.argmax(dim=1)
             output = model(image)
-            if args.criterion == "APAFocalLoss":
-                if not (hasattr(model, "kappa_param") and hasattr(model, "lambda_param")):
-                    raise AttributeError("Model must have 'kappa_param' and 'lambda_param' attributes for APAFocalLoss.")
-                loss = criterion(output, target, model.kappa_param, model.lambda_param)
-            else:
-                loss = criterion(output, target)
+            loss = criterion(output, target)
             if hasattr(criterion, "iif"):
                 output = criterion(output, infer=True)
             batch_size = image.shape[0]
@@ -498,7 +494,7 @@ def main(args):
         if model_ema:
             evaluate(model_ema, criterion, data_loader_test, device=device, log_suffix="EMA")
         else:
-            evaluate(model, criterion, data_loader_test, device=device)
+            evaluate(model, criterion, data_loader_test, device=device, args=args)
         return
 
     print("Start training")
@@ -519,11 +515,11 @@ def main(args):
         train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, args, model_ema, scaler)
         lr_scheduler.step()
         if args.no_val is False:
-            acc = evaluate(model, criterion, data_loader_test, device=device)
+            acc = evaluate(model, criterion, data_loader_test, device=device, args=args)
             if acc > best_acc:
                 best_acc = acc
             if model_ema:
-                evaluate(model_ema, criterion, data_loader_test, device=device, log_suffix="EMA")
+                evaluate(model_ema, criterion, data_loader_test, device=device, args=args, log_suffix="EMA")
         if args.output_dir:
             checkpoint = {
                 "model": model_without_ddp.state_dict(),

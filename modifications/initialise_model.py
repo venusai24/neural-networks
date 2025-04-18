@@ -61,7 +61,7 @@ def get_criterion(args,dataset,model=None):
     else:
         weight=None
     if args.criterion =='ce':
-        return torch.nn.CrossEntropyLoss(label_smoothing=args.label_smoothing,weight=weight)
+        return torch.nn.CrossEntropyLoss(label_smoothing=0.1,weight=weight)
     elif args.criterion =='ldam':
          return custom.LDAMLoss(dataset.get_cls_num_list(),max_m=0.5,weight=weight,s=30)
        

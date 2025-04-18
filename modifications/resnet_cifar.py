@@ -60,7 +60,6 @@ class ResNet20APA(nn.Module):
         self.layer1 = self._make_layer(BasicBlockAPA, 16, 3, stride=1)
         self.layer2 = self._make_layer(BasicBlockAPA, 32, 3, stride=2)
         self.layer3 = self._make_layer(BasicBlockAPA, 64, 3, stride=2)
-
         self.linear = nn.Linear(256, num_classes)
 
     def _make_layer(self, block, planes, num_blocks, stride):

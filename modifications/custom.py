@@ -21,6 +21,9 @@ class LDAMLoss(nn.Module):
         # Ensure target is torch.long
         target = target.long()
 
+        print("x shape:", x.shape)
+        print("target shape:", target.shape)
+
         index = torch.zeros_like(x, dtype=torch.long)
         index.scatter_(1, target.view(-1, 1), 1)
         index_float = index.type(torch.float32)

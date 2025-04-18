@@ -18,7 +18,8 @@ class LDAMLoss(nn.Module):
         if x.device != self.m_list.device:
             self.m_list = self.m_list.to(x.device)
 
-        index = torch.zeros_like(x, dtype=torch.uint8)
+        # Fix: use torch.long for index
+        index = torch.zeros_like(x, dtype=torch.long)
         index.scatter_(1, target.view(-1, 1), 1)
         index_float = index.type(torch.float32)
 

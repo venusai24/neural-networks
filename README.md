@@ -74,13 +74,6 @@ Includes dependency management files.
 
 ---
 
-### Additional Files
-- **`README.md`**: Project documentation (this file).
-- **`LICENSE`**: Licensing information.
-- **`requirements.txt`**: General dependency list.
-
----
-
 ## Getting Started
 
 To get started with this repository:

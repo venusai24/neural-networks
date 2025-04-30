@@ -39,9 +39,8 @@ The initial implementation of neural network models and utilities where we imple
 ### 4. `modifications`
 Contains modified implementations and utilities for adaptive activation functions where we modified the existing adaptive activation function ie. APA and developed a hybrid activation module combining APA, AdAct-style hinges, and frequency-conditioned parameters, resulting in a more flexible and adaptive network. Frequency-Conditioned parameters dynamically adjust activation steepness (κ) based on input frequency content.
 
-$$
-\text{HybridAPA}(z) = \underbrace{(\lambda e^{-\kappa z} + 1)^{-1/\lambda}}_{\text{APA}} + \underbrace{\sum_{h \in \mathcal{H}} \max(0, z - h)}_{\text{AdAct Hinges}}
-$$
+$\text{HybridAPA}(z) = (\lambda e^{-\kappa z} + 1)^{-1/\lambda} + \sum_{h \in \mathcal{H}} \max(0, z - h)$
+
 
 where
 

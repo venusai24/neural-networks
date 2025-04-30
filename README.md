@@ -30,7 +30,8 @@ Houses training and testing checkpoints to continue training a pretrained model 
 
 ### 3. `initial_implementation`
 The initial implementation of neural network models and utilities where we implemented the base paper whose link is given below.
-[Base Paper](https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/07153.pdf)
+
+[Base Paper having APA implementation](https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/07153.pdf)
 
 [View the complete list in the `initial_implementation` directory](https://github.com/venusai24/neural-networks/tree/main/initial_implementation)
 
